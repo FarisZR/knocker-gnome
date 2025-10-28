@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.knocker" path="/org/gnome/shell/extensions/knocker/">
+    <key name="show-indicator" type="b">
+      <default>true</default>
+      <summary>Show indicator in panel</summary>
+      <description>Show the Knocker indicator icon in the panel when the service is active</description>
+    </key>
+    <key name="auto-start-service" type="b">
+      <default>false</default>
+      <summary>Auto-start service</summary>
+      <description>Automatically start the knocker.service when the extension is enabled</description>
+    </key>
+    <key name="notification-on-error" type="b">
+      <default>true</default>
+      <summary>Notify on errors</summary>
+      <description>Show notifications when the Knocker service encounters errors</description>
+    </key>
+    <key name="notification-on-knock" type="b">
+      <default>true</default>
+      <summary>Notify on successful knock</summary>
+      <description>Show notifications when a knock is successfully completed</description>
+    </key>
+  </schema>
+</schemalist>

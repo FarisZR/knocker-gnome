@@ -16,41 +16,80 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
-import GObject from 'gi://GObject';
-import St from 'gi://St';
+import GLib from 'gi://GLib';
 
 import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
-import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
-import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
-
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
-const Indicator = GObject.registerClass(
-class Indicator extends PanelMenu.Button {
-    _init() {
-        super._init(0.0, _('My Shiny Indicator'));
+import {KnockerService} from './knockerService.js';
+import {KnockerMonitor} from './knockerMonitor.js';
+import {KnockerIndicator} from './knockerQuickSettings.js';
 
-        this.add_child(new St.Icon({
-            icon_name: 'face-smile-symbolic',
-            style_class: 'system-status-icon',
-        }));
-
-        let item = new PopupMenu.PopupMenuItem(_('Show Notification'));
-        item.connect('activate', () => {
-            Main.notify(_('Whatʼs up, folks?'));
-        });
-        this.menu.addMenuItem(item);
+export default class KnockerExtension extends Extension {
+    constructor(metadata) {
+        super(metadata);
+        this._indicator = null;
+        this._knockerService = null;
+        this._knockerMonitor = null;
     }
-});
 
-export default class IndicatorExampleExtension extends Extension {
-    enable() {
-        this._indicator = new Indicator();
-        Main.panel.addToStatusArea(this.uuid, this._indicator);
+    async enable() {
+        // Initialize services
+        this._knockerService = new KnockerService();
+        this._knockerMonitor = new KnockerMonitor();
+
+        // Check if knocker-cli is installed
+        const isInstalled = await this._knockerService.checkKnockerInstalled();
+        if (!isInstalled) {
+            this._showKnockerNotInstalledError();
+            return;
+        }
+
+        // Start monitoring journald logs
+        this._knockerMonitor.start();
+
+        // Create and add the indicator
+        this._indicator = new KnockerIndicator(this, this._knockerService, this._knockerMonitor);
+        Main.panel.statusArea.quickSettings.addExternalIndicator(this._indicator);
+
+        // Auto-start service if enabled in settings
+        const settings = this.getSettings();
+        if (settings.get_boolean('auto-start-service')) {
+            // Wait a bit for the monitor to initialize
+            GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000, async () => {
+                const isActive = await this._knockerService.isServiceActive();
+                if (!isActive) {
+                    await this._knockerService.startService();
+                }
+                return GLib.SOURCE_REMOVE;
+            });
+        }
     }
 
     disable() {
-        this._indicator.destroy();
-        this._indicator = null;
+        // Clean up monitor
+        if (this._knockerMonitor) {
+            this._knockerMonitor.destroy();
+            this._knockerMonitor = null;
+        }
+
+        // Clean up service
+        if (this._knockerService) {
+            this._knockerService.destroy();
+            this._knockerService = null;
+        }
+
+        // Clean up indicator
+        if (this._indicator) {
+            this._indicator.destroy();
+            this._indicator = null;
+        }
+    }
+
+    _showKnockerNotInstalledError() {
+        Main.notifyError(
+            'Knocker Extension',
+            'knocker-cli is not installed. Please install it from:\nhttps://github.com/FarisZR/Knocker-CLI'
+        );
     }
 }

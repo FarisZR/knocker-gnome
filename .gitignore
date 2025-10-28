@@ -1,0 +1,25 @@
+# Compiled GSettings schemas
+schemas/gschemas.compiled
+
+# Editor files
+*~
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node modules (if ever needed for tooling)
+node_modules/
+
+# Build artifacts
+*.zip
+dist/
+build/
+
+# Temporary files
+*.tmp
+.tmp/
