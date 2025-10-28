@@ -2,6 +2,10 @@
 
 A GNOME Shell extension for managing the [Knocker-CLI](https://github.com/FarisZR/Knocker-CLI) port knocking service.
 
+## Quick Start
+
+👉 **New to Knocker?** Check out the [Quick Start Guide](docs/QUICKSTART.md) to get up and running in 5 minutes!
+
 ## Features
 
 - **Quick Settings Integration**: Easily toggle the knocker service on/off from the GNOME Quick Settings panel
