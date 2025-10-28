@@ -1,0 +1,8 @@
+{
+  "name": "Knocker",
+  "description": "Gnome Extension to manage Knocker-CLI background service and knock status",
+  "uuid": "Knocker@fariszr.com",
+  "shell-version": [
+    "48"
+  ]
+}
