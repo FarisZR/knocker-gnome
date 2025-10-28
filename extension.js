@@ -33,37 +33,42 @@ export default class KnockerExtension extends Extension {
         this._knockerMonitor = null;
     }
 
-    async enable() {
+    enable() {
         // Initialize services
         this._knockerService = new KnockerService();
         this._knockerMonitor = new KnockerMonitor();
 
-        // Check if knocker-cli is installed
-        const isInstalled = await this._knockerService.checkKnockerInstalled();
-        if (!isInstalled) {
+        // Check if knocker-cli is installed (async)
+        this._knockerService.checkKnockerInstalled().then(isInstalled => {
+            if (!isInstalled) {
+                this._showKnockerNotInstalledError();
+                return;
+            }
+
+            // Start monitoring journald logs
+            this._knockerMonitor.start();
+
+            // Create and add the indicator
+            this._indicator = new KnockerIndicator(this, this._knockerService, this._knockerMonitor);
+            Main.panel.statusArea.quickSettings.addExternalIndicator(this._indicator);
+
+            // Auto-start service if enabled in settings
+            const settings = this.getSettings();
+            if (settings.get_boolean('auto-start-service')) {
+                // Wait a bit for the monitor to initialize
+                GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000, () => {
+                    this._knockerService.isServiceActive().then(isActive => {
+                        if (!isActive) {
+                            this._knockerService.startService();
+                        }
+                    });
+                    return GLib.SOURCE_REMOVE;
+                });
+            }
+        }).catch(error => {
+            console.error('Failed to initialize Knocker extension:', error);
             this._showKnockerNotInstalledError();
-            return;
-        }
-
-        // Start monitoring journald logs
-        this._knockerMonitor.start();
-
-        // Create and add the indicator
-        this._indicator = new KnockerIndicator(this, this._knockerService, this._knockerMonitor);
-        Main.panel.statusArea.quickSettings.addExternalIndicator(this._indicator);
-
-        // Auto-start service if enabled in settings
-        const settings = this.getSettings();
-        if (settings.get_boolean('auto-start-service')) {
-            // Wait a bit for the monitor to initialize
-            GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000, async () => {
-                const isActive = await this._knockerService.isServiceActive();
-                if (!isActive) {
-                    await this._knockerService.startService();
-                }
-                return GLib.SOURCE_REMOVE;
-            });
-        }
+        });
     }
 
     disable() {
