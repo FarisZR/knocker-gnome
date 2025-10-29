@@ -35,6 +35,11 @@ cp prefs.js "$BUILD_DIR/"
 cp metadata.json "$BUILD_DIR/"
 cp stylesheet.css "$BUILD_DIR/"
 
+# Copy icons
+echo "Copying icons..."
+mkdir -p "$BUILD_DIR/icons"
+cp icons/*.svg "$BUILD_DIR/icons/"
+
 # Copy schemas
 echo "Copying schemas..."
 mkdir -p "$BUILD_DIR/schemas"

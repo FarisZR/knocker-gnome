@@ -17,9 +17,11 @@
  */
 
 import GLib from 'gi://GLib';
+import Gio from 'gi://Gio';
 
 import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
 
 import {KnockerService} from './knockerService.js';
 import {KnockerMonitor} from './knockerMonitor.js';
@@ -89,12 +91,35 @@ export default class KnockerExtension extends Extension {
             this._indicator.destroy();
             this._indicator = null;
         }
+        
+        // Clean up notification source
+        if (this._notificationSource) {
+            this._notificationSource.destroy();
+            this._notificationSource = null;
+        }
     }
 
     _showKnockerNotInstalledError() {
-        Main.notifyError(
+        // Create notification source with custom icon
+        const iconPath = this.path + '/icons/knocker-symbolic.svg';
+        const file = Gio.File.new_for_path(iconPath);
+        const gicon = new Gio.FileIcon({file: file});
+        
+        if (!this._notificationSource) {
+            this._notificationSource = new MessageTray.Source('Knocker', gicon);
+            this._notificationSource.connect('destroy', () => {
+                this._notificationSource = null;
+            });
+            Main.messageTray.add(this._notificationSource);
+        }
+        
+        const notification = new MessageTray.Notification(
+            this._notificationSource,
             'Knocker Extension',
             'knocker-cli is not installed. Please install it from:\nhttps://github.com/FarisZR/Knocker-CLI'
         );
+        notification.setUrgency(MessageTray.Urgency.HIGH);
+        notification.setTransient(true);
+        this._notificationSource.showNotification(notification);
     }
 }

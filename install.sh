@@ -34,6 +34,11 @@ cp prefs.js "$EXTENSION_DIR/"
 cp metadata.json "$EXTENSION_DIR/"
 cp stylesheet.css "$EXTENSION_DIR/"
 
+# Copy icons
+echo "Copying icons..."
+mkdir -p "$EXTENSION_DIR/icons"
+cp icons/*.svg "$EXTENSION_DIR/icons/"
+
 # Copy schemas
 echo "Copying schemas..."
 mkdir -p "$EXTENSION_DIR/schemas"

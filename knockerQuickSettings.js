@@ -6,10 +6,12 @@
 import GObject from 'gi://GObject';
 import St from 'gi://St';
 import GLib from 'gi://GLib';
+import Gio from 'gi://Gio';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import * as QuickSettings from 'resource:///org/gnome/shell/ui/quickSettings.js';
+import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
 
 import {KnockerEvent} from './knockerMonitor.js';
 
@@ -19,7 +21,7 @@ class KnockerToggle extends QuickSettings.QuickMenuToggle {
         super._init({
             title: 'Knocker',
             subtitle: 'Service Inactive',
-            iconName: 'network-wireless-symbolic',
+            iconName: 'knocker-symbolic',
             toggleMode: true,
         });
 
@@ -28,6 +30,9 @@ class KnockerToggle extends QuickSettings.QuickMenuToggle {
         this._knockerMonitor = knockerMonitor;
         this._settings = extensionObject.getSettings();
         this._updateTimeoutId = null;
+        
+        // Set up custom icon
+        this._setupIcon();
 
         // Set up menu
         this._setupMenu();
@@ -41,10 +46,22 @@ class KnockerToggle extends QuickSettings.QuickMenuToggle {
         // Handle toggle changes
         this.connect('clicked', () => this._onToggleClicked());
     }
+    
+    _setupIcon() {
+        // Load custom icon from extension directory
+        const iconPath = this._extensionObject.path + '/icons/knocker-symbolic.svg';
+        const file = Gio.File.new_for_path(iconPath);
+        const gicon = new Gio.FileIcon({file: file});
+        this.set_gicon(gicon);
+    }
 
     _setupMenu() {
-        // Add header
-        this.menu.setHeader('network-wireless-symbolic', 'Knocker', 'Port Knocking Service');
+        // Add header with custom icon
+        const iconPath = this._extensionObject.path + '/icons/knocker-symbolic.svg';
+        const file = Gio.File.new_for_path(iconPath);
+        const gicon = new Gio.FileIcon({file: file});
+        
+        this.menu.setHeader(gicon, 'Knocker', 'Port Knocking Service');
 
         // IP and expiry section
         this._whitelistSection = new PopupMenu.PopupMenuSection();
@@ -96,7 +113,7 @@ class KnockerToggle extends QuickSettings.QuickMenuToggle {
             this._updateUI();
             if (this._settings.get_boolean('notification-on-knock')) {
                 const expiryTime = this._formatTimestamp(data.expiresUnix);
-                Main.notify('Knocker', `Whitelisted ${data.whitelistIp} until ${expiryTime}`);
+                this._showNotification('Knocker', `Whitelisted ${data.whitelistIp} until ${expiryTime}`);
             }
         });
 
@@ -112,7 +129,7 @@ class KnockerToggle extends QuickSettings.QuickMenuToggle {
         // Monitor errors
         this._knockerMonitor.on(KnockerEvent.ERROR, (data) => {
             if (this._settings.get_boolean('notification-on-error')) {
-                Main.notifyError('Knocker Error', data.errorMsg || data.message);
+                this._showNotification('Knocker Error', data.errorMsg || data.message, MessageTray.Urgency.HIGH);
             }
         });
 
@@ -184,14 +201,14 @@ class KnockerToggle extends QuickSettings.QuickMenuToggle {
             if (!success) {
                 // Revert toggle if start failed
                 this.set({checked: false});
-                Main.notifyError('Knocker', 'Failed to start knocker.service');
+                this._showNotification('Knocker', 'Failed to start knocker.service', MessageTray.Urgency.HIGH);
             }
         } else {
             const success = await this._knockerService.stopService();
             if (!success) {
                 // Revert toggle if stop failed
                 this.set({checked: true});
-                Main.notifyError('Knocker', 'Failed to stop knocker.service');
+                this._showNotification('Knocker', 'Failed to stop knocker.service', MessageTray.Urgency.HIGH);
             }
         }
 
@@ -208,9 +225,9 @@ class KnockerToggle extends QuickSettings.QuickMenuToggle {
         try {
             const success = await this._knockerService.triggerKnock();
             if (success) {
-                Main.notify('Knocker', 'Knock triggered successfully');
+                this._showNotification('Knocker', 'Knock triggered successfully');
             } else {
-                Main.notifyError('Knocker', 'Failed to trigger knock');
+                this._showNotification('Knocker', 'Failed to trigger knock', MessageTray.Urgency.HIGH);
             }
         } finally {
             // Re-enable button after a short delay
@@ -219,6 +236,27 @@ class KnockerToggle extends QuickSettings.QuickMenuToggle {
                 return GLib.SOURCE_REMOVE;
             });
         }
+    }
+    
+    _showNotification(title, message, urgency = MessageTray.Urgency.NORMAL) {
+        // Create notification source with custom icon if not exists
+        if (!this._notificationSource) {
+            const iconPath = this._extensionObject.path + '/icons/knocker-symbolic.svg';
+            const file = Gio.File.new_for_path(iconPath);
+            const gicon = new Gio.FileIcon({file: file});
+            
+            this._notificationSource = new MessageTray.Source('Knocker', gicon);
+            this._notificationSource.connect('destroy', () => {
+                this._notificationSource = null;
+            });
+            Main.messageTray.add(this._notificationSource);
+        }
+        
+        // Create and show notification
+        const notification = new MessageTray.Notification(this._notificationSource, title, message);
+        notification.setUrgency(urgency);
+        notification.setTransient(true);
+        this._notificationSource.showNotification(notification);
     }
 
     _formatTimestamp(unixTimestamp) {
@@ -252,6 +290,12 @@ class KnockerToggle extends QuickSettings.QuickMenuToggle {
             GLib.Source.remove(this._updateTimeoutId);
             this._updateTimeoutId = null;
         }
+        
+        // Clean up notification source
+        if (this._notificationSource) {
+            this._notificationSource.destroy();
+            this._notificationSource = null;
+        }
 
         super.destroy();
     }
@@ -264,22 +308,68 @@ class KnockerIndicator extends QuickSettings.SystemIndicator {
 
         this._extensionObject = extensionObject;
         this._settings = extensionObject.getSettings();
+        this._knockerService = knockerService;
+        this._knockerMonitor = knockerMonitor;
 
-        // Create an icon for the indicator
+        // Create an icon for the indicator with custom knocker icon
         this._indicator = this._addIndicator();
-        this._indicator.icon_name = 'network-wireless-symbolic';
-
-        // Bind indicator visibility to settings
-        this._settings.bind('show-indicator',
-            this._indicator, 'visible',
-            0); // Gio.SettingsBindFlags.DEFAULT
+        const iconPath = extensionObject.path + '/icons/knocker-symbolic.svg';
+        const file = Gio.File.new_for_path(iconPath);
+        const gicon = new Gio.FileIcon({file: file});
+        this._indicator.gicon = gicon;
+        
+        // Initially hide the indicator (will be shown when service is active)
+        this._indicator.visible = false;
+        
+        // Monitor service state to update indicator visibility
+        this._setupIndicatorVisibility();
 
         // Add the toggle
         this._toggle = new KnockerToggle(extensionObject, knockerService, knockerMonitor);
         this.quickSettingsItems.push(this._toggle);
     }
+    
+    _setupIndicatorVisibility() {
+        // Update visibility based on service state AND settings
+        const updateVisibility = async () => {
+            const showIndicatorSetting = this._settings.get_boolean('show-indicator');
+            const isServiceActive = await this._knockerService.isServiceActive();
+            
+            // Only show indicator if both setting is enabled AND service is active
+            this._indicator.visible = showIndicatorSetting && isServiceActive;
+        };
+        
+        // Initial update
+        updateVisibility();
+        
+        // Watch for settings changes
+        this._settingsChangedId = this._settings.connect('changed::show-indicator', () => {
+            updateVisibility();
+        });
+        
+        // Watch for service state changes
+        this._serviceStateHandler = this._knockerMonitor.on(KnockerEvent.SERVICE_STATE, () => {
+            updateVisibility();
+        });
+        
+        // Periodically check service state (in case we miss events)
+        this._visibilityCheckId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 10, () => {
+            updateVisibility();
+            return GLib.SOURCE_CONTINUE;
+        });
+    }
 
     destroy() {
+        if (this._settingsChangedId) {
+            this._settings.disconnect(this._settingsChangedId);
+            this._settingsChangedId = null;
+        }
+        
+        if (this._visibilityCheckId) {
+            GLib.Source.remove(this._visibilityCheckId);
+            this._visibilityCheckId = null;
+        }
+        
         this.quickSettingsItems.forEach(item => item.destroy());
         super.destroy();
     }
