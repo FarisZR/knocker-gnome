@@ -21,7 +21,7 @@ class KnockerToggle extends QuickSettings.QuickMenuToggle {
         super._init({
             title: 'Knocker',
             subtitle: 'Service Inactive',
-            iconName: 'knocker-symbolic',
+            iconName: 'network-server-symbolic',
             toggleMode: true,
         });
 
@@ -30,9 +30,6 @@ class KnockerToggle extends QuickSettings.QuickMenuToggle {
         this._knockerMonitor = knockerMonitor;
         this._settings = extensionObject.getSettings();
         this._updateTimeoutId = null;
-        
-        // Set up custom icon
-        this._setupIcon();
 
         // Set up menu
         this._setupMenu();
@@ -46,22 +43,10 @@ class KnockerToggle extends QuickSettings.QuickMenuToggle {
         // Handle toggle changes
         this.connect('clicked', () => this._onToggleClicked());
     }
-    
-    _setupIcon() {
-        // Load custom icon from extension directory
-        const iconPath = this._extensionObject.path + '/icons/knocker-symbolic.svg';
-        const file = Gio.File.new_for_path(iconPath);
-        const gicon = new Gio.FileIcon({file: file});
-        this.set_gicon(gicon);
-    }
 
     _setupMenu() {
-        // Add header with custom icon
-        const iconPath = this._extensionObject.path + '/icons/knocker-symbolic.svg';
-        const file = Gio.File.new_for_path(iconPath);
-        const gicon = new Gio.FileIcon({file: file});
-        
-        this.menu.setHeader(gicon, 'Knocker', 'Port Knocking Service');
+        // Add header
+        this.menu.setHeader('network-server-symbolic', 'Knocker', 'Port Knocking Service');
 
         // IP and expiry section
         this._whitelistSection = new PopupMenu.PopupMenuSection();
@@ -239,13 +224,9 @@ class KnockerToggle extends QuickSettings.QuickMenuToggle {
     }
     
     _showNotification(title, message, urgency = MessageTray.Urgency.NORMAL) {
-        // Create notification source with custom icon if not exists
+        // Create notification source if not exists
         if (!this._notificationSource) {
-            const iconPath = this._extensionObject.path + '/icons/knocker-symbolic.svg';
-            const file = Gio.File.new_for_path(iconPath);
-            const gicon = new Gio.FileIcon({file: file});
-            
-            this._notificationSource = new MessageTray.Source('Knocker', gicon);
+            this._notificationSource = new MessageTray.Source('Knocker', 'network-server-symbolic');
             this._notificationSource.connect('destroy', () => {
                 this._notificationSource = null;
             });
@@ -311,12 +292,9 @@ class KnockerIndicator extends QuickSettings.SystemIndicator {
         this._knockerService = knockerService;
         this._knockerMonitor = knockerMonitor;
 
-        // Create an icon for the indicator with custom knocker icon
+        // Create an icon for the indicator
         this._indicator = this._addIndicator();
-        const iconPath = extensionObject.path + '/icons/knocker-symbolic.svg';
-        const file = Gio.File.new_for_path(iconPath);
-        const gicon = new Gio.FileIcon({file: file});
-        this._indicator.gicon = gicon;
+        this._indicator.icon_name = 'network-server-symbolic';
         
         // Initially hide the indicator (will be shown when service is active)
         this._indicator.visible = false;

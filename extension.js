@@ -100,13 +100,9 @@ export default class KnockerExtension extends Extension {
     }
 
     _showKnockerNotInstalledError() {
-        // Create notification source with custom icon
-        const iconPath = this.path + '/icons/knocker-symbolic.svg';
-        const file = Gio.File.new_for_path(iconPath);
-        const gicon = new Gio.FileIcon({file: file});
-        
+        // Create notification source
         if (!this._notificationSource) {
-            this._notificationSource = new MessageTray.Source('Knocker', gicon);
+            this._notificationSource = new MessageTray.Source('Knocker', 'network-server-symbolic');
             this._notificationSource.connect('destroy', () => {
                 this._notificationSource = null;
             });
