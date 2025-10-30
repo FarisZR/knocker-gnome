@@ -127,6 +127,19 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for development documentation.
 
 This extension is licensed under the GPL-2.0-or-later license. See the source files for details.
 
+## Contributing
+
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## Documentation
+
+- [Quick Start Guide](docs/QUICKSTART.md) - Get started in 5 minutes
+- [Installation Guide](docs/INSTALLATION.md) - Detailed installation instructions  
+- [Testing Guide](docs/TESTING.md) - Comprehensive testing procedures
+- [Architecture Guide](docs/ARCHITECTURE.md) - Technical design details
+- [Development Guide](docs/DEVELOPMENT.md) - For contributors
+- [Publishing Guide](docs/PUBLISHING.md) - Submission to extensions.gnome.org
+
 ## Credits
 
 - Based on the [GJS Guide](https://gitlab.gnome.org/World/javascript/gjs-guide)
