@@ -116,7 +116,7 @@ export class KnockerMonitor {
             for (const line of lines.reverse()) {
                 try {
                     const entry = JSON.parse(line);
-                    this._processEntry(entry);
+                    this._processEntry(entry, {emit: false});
                 } catch (e) {
                     // Skip invalid JSON lines
                 }
@@ -236,7 +236,7 @@ export class KnockerMonitor {
      * Process a journald entry
      * @private
      */
-    _processEntry(entry) {
+    _processEntry(entry, {emit = true} = {}) {
         const event = entry.KNOCKER_EVENT;
         if (!event) {
             return;
@@ -281,7 +281,9 @@ export class KnockerMonitor {
         }
 
         // Notify listeners
-        this._emit(event, eventData);
+        if (emit) {
+            this._emit(event, eventData);
+        }
     }
 
     /**
