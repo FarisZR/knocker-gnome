@@ -39,44 +39,68 @@ export default class KnockerExtension extends Extension {
 
     enable() {
         this._initCancellable = new Gio.Cancellable();
+        const initCancellable = this._initCancellable;
         this._autoStartTimeoutId = null;
 
         // Initialize services
         this._knockerService = new KnockerService();
         this._knockerMonitor = new KnockerMonitor();
 
+        const checkAborted = () => {
+            if (initCancellable.is_cancelled()) {
+                if (this._initCancellable === initCancellable)
+                    this._initCancellable = null;
+                return 'cancelled';
+            }
+
+            if (this._initCancellable !== initCancellable)
+                return 'stale';
+
+            return null;
+        };
+
         // Check if knocker-cli is installed (async)
         this._knockerService.checkKnockerInstalled().then(isInstalled => {
-            const initCancellable = this._initCancellable;
-            if (initCancellable?.is_cancelled()) {
-                this._initCancellable = null;
+            if (checkAborted())
                 return;
-            }
 
             if (!isInstalled) {
                 this._showKnockerNotInstalledError();
-                this._initCancellable = null;
+                if (this._initCancellable === initCancellable)
+                    this._initCancellable = null;
                 return;
             }
+
+            if (checkAborted())
+                return;
 
             // Start monitoring journald logs
             this._knockerMonitor.start();
 
+            if (checkAborted())
+                return;
+
             // Create and add the indicator
             this._indicator = new KnockerIndicator(this, this._knockerService, this._knockerMonitor);
             Main.panel.statusArea.quickSettings.addExternalIndicator(this._indicator);
+
+            if (checkAborted())
+                return;
 
             // Auto-start service if enabled in settings
             const settings = this.getSettings();
             if (settings.get_boolean('auto-start-service')) {
                 // Wait a bit for the monitor to initialize
                 this._autoStartTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000, () => {
-                    if (this._initCancellable?.is_cancelled()) {
-                        this._autoStartTimeoutId = null;
-                        this._initCancellable = null;
+                    const abortReason = checkAborted();
+                    if (abortReason) {
+                        if (abortReason === 'cancelled')
+                            this._autoStartTimeoutId = null;
                         return GLib.SOURCE_REMOVE;
                     }
                     this._knockerService.isServiceActive().then(isActive => {
+                        if (checkAborted())
+                            return;
                         if (!isActive) {
                             this._knockerService.startService();
                         }
@@ -86,15 +110,15 @@ export default class KnockerExtension extends Extension {
                 });
             }
 
-            this._initCancellable = null;
-        }).catch(error => {
-            if (this._initCancellable?.is_cancelled()) {
+            if (this._initCancellable === initCancellable)
                 this._initCancellable = null;
+        }).catch(error => {
+            if (checkAborted())
                 return;
-            }
             console.error('Failed to initialize Knocker extension:', error);
             this._showKnockerNotInstalledError();
-            this._initCancellable = null;
+            if (this._initCancellable === initCancellable)
+                this._initCancellable = null;
         });
     }
 
