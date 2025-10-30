@@ -17,6 +17,7 @@
  */
 
 import GLib from 'gi://GLib';
+import Gio from 'gi://Gio';
 
 import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
@@ -32,17 +33,29 @@ export default class KnockerExtension extends Extension {
         this._indicator = null;
         this._knockerService = null;
         this._knockerMonitor = null;
+        this._initCancellable = null;
+        this._autoStartTimeoutId = null;
     }
 
     enable() {
+        this._initCancellable = new Gio.Cancellable();
+        this._autoStartTimeoutId = null;
+
         // Initialize services
         this._knockerService = new KnockerService();
         this._knockerMonitor = new KnockerMonitor();
 
         // Check if knocker-cli is installed (async)
         this._knockerService.checkKnockerInstalled().then(isInstalled => {
+            const initCancellable = this._initCancellable;
+            if (initCancellable?.is_cancelled()) {
+                this._initCancellable = null;
+                return;
+            }
+
             if (!isInstalled) {
                 this._showKnockerNotInstalledError();
+                this._initCancellable = null;
                 return;
             }
 
@@ -57,22 +70,45 @@ export default class KnockerExtension extends Extension {
             const settings = this.getSettings();
             if (settings.get_boolean('auto-start-service')) {
                 // Wait a bit for the monitor to initialize
-                GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000, () => {
+                this._autoStartTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000, () => {
+                    if (this._initCancellable?.is_cancelled()) {
+                        this._autoStartTimeoutId = null;
+                        this._initCancellable = null;
+                        return GLib.SOURCE_REMOVE;
+                    }
                     this._knockerService.isServiceActive().then(isActive => {
                         if (!isActive) {
                             this._knockerService.startService();
                         }
                     });
+                    this._autoStartTimeoutId = null;
                     return GLib.SOURCE_REMOVE;
                 });
             }
+
+            this._initCancellable = null;
         }).catch(error => {
+            if (this._initCancellable?.is_cancelled()) {
+                this._initCancellable = null;
+                return;
+            }
             console.error('Failed to initialize Knocker extension:', error);
             this._showKnockerNotInstalledError();
+            this._initCancellable = null;
         });
     }
 
     disable() {
+        // Cancel any pending initialization
+        if (this._initCancellable) {
+            this._initCancellable.cancel();
+        }
+
+        if (this._autoStartTimeoutId) {
+            GLib.Source.remove(this._autoStartTimeoutId);
+            this._autoStartTimeoutId = null;
+        }
+
         // Clean up monitor
         if (this._knockerMonitor) {
             this._knockerMonitor.destroy();
