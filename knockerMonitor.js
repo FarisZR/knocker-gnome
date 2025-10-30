@@ -117,7 +117,7 @@ export class KnockerMonitor {
                 try {
                     const entry = JSON.parse(line);
                     this._processEntry(entry, {emit: false});
-                } catch (e) {
+                } catch (_err) {
                     // Skip invalid JSON lines
                 }
             }
@@ -208,7 +208,7 @@ export class KnockerMonitor {
                     try {
                         const entry = JSON.parse(line);
                         this._processEntry(entry);
-                    } catch (e) {
+                    } catch (_err) {
                         // Skip invalid JSON
                     }
                 }

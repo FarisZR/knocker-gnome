@@ -18,7 +18,7 @@ export class KnockerService {
         try {
             const [success, stdout] = await this._execCommand(['which', 'knocker']);
             return success && stdout.trim().length > 0;
-        } catch (e) {
+        } catch (_err) {
             return false;
         }
     }
@@ -59,7 +59,7 @@ export class KnockerService {
         try {
             const [success, stdout] = await this._execCommand(['systemctl', '--user', 'is-active', 'knocker.service']);
             return success && stdout.trim() === 'active';
-        } catch (e) {
+        } catch (_err) {
             return false;
         }
     }

@@ -27,6 +27,8 @@ export default [
             'no-unused-vars': ['warn', {
                 argsIgnorePattern: '^_',
                 varsIgnorePattern: '^_',
+                caughtErrors: 'all',
+                caughtErrorsIgnorePattern: '^_',
             }],
             'no-trailing-spaces': 'error',
             'eol-last': ['error', 'always'],
