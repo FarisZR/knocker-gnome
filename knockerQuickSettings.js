@@ -163,7 +163,6 @@ class KnockerToggle extends QuickSettings.QuickMenuToggle {
             const remaining = state.expiresUnix - now;
 
             if (remaining > 0) {
-                const expiryTime = this._formatTimestamp(state.expiresUnix);
                 const remainingStr = this._formatDuration(remaining);
                 this._ipLabel.label.text = `${state.whitelistIp} (expires in ${remainingStr})`;
             } else {
