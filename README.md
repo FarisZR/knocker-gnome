@@ -2,7 +2,7 @@
 
 A GNOME Shell extension for managing the [Knocker-CLI](https://github.com/FarisZR/Knocker-CLI) port knocking service.
 
-![](assets/screenshot.png)
+![Knocker GNOME extension shown in Quick Settings with toggle and IP/knock status](assets/screenshot.png)
 
 ## Quick Start
 
