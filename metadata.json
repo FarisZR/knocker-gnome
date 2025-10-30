@@ -3,6 +3,10 @@
   "description": "Gnome Extension to manage Knocker-CLI background service and knock status",
   "uuid": "Knocker@fariszr.com",
   "shell-version": [
-    "48"
-  ]
+    "48",
+    "49"
+  ],
+  "settings-schema": "org.gnome.shell.extensions.knocker",
+  "url": "https://github.com/FarisZR/knocker-gnome",
+  "version": 1
 }

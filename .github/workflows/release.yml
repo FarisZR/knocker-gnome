@@ -1,0 +1,91 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build and Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version from tag
+        id: get_version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extension version: $VERSION"
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libglib2.0-dev zip gettext
+
+      - name: Validate schemas
+        run: |
+          glib-compile-schemas --strict --dry-run schemas/
+          echo "✓ Schema validation passed"
+
+      - name: Check JavaScript syntax
+        run: |
+          for file in *.js; do
+            if [ -f "$file" ]; then
+              node --check "$file"
+              echo "✓ $file"
+            fi
+          done
+
+      - name: Build extension package
+        run: |
+          chmod +x build.sh
+          ./build.sh
+
+      - name: Get package filename
+        id: package_name
+        run: |
+          PACKAGE=$(ls *.shell-extension.zip 2>/dev/null | head -1)
+          if [ -z "$PACKAGE" ]; then
+            echo "Error: No .shell-extension.zip file found"
+            exit 1
+          fi
+          echo "PACKAGE=$PACKAGE" >> $GITHUB_OUTPUT
+          echo "Package: $PACKAGE"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            *.shell-extension.zip
+          body: |
+            ## Knocker GNOME Extension v${{ steps.get_version.outputs.VERSION }}
+            
+            ### Installation
+            
+            Download the `.shell-extension.zip` file and install it:
+            
+            ```bash
+            gnome-extensions install Knocker@fariszr.com.shell-extension.zip
+            gnome-extensions enable Knocker@fariszr.com
+            ```
+            
+            Then restart GNOME Shell (X11: Alt+F2, type 'r', Enter; Wayland: log out and back in).
+            
+            ### Requirements
+            
+            - GNOME Shell 48 or 49
+            - [Knocker-CLI](https://github.com/FarisZR/Knocker-CLI) installed and configured
+            
+            ### Changes
+            
+            See [CHANGELOG.md](CHANGELOG.md) for details.
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

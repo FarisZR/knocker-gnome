@@ -1,0 +1,29 @@
+{
+  "name": "knocker-gnome-extension",
+  "version": "1.0.0",
+  "description": "GNOME Shell extension for Knocker-CLI port knocking service",
+  "private": true,
+  "scripts": {
+    "lint": "eslint --ext .js .",
+    "lint:fix": "eslint --ext .js . --fix",
+    "build": "./build.sh",
+    "test": "node --check *.js && glib-compile-schemas --strict --dry-run schemas/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FarisZR/knocker-gnome"
+  },
+  "keywords": [
+    "gnome",
+    "gnome-shell",
+    "extension",
+    "knocker",
+    "port-knocking"
+  ],
+  "author": "FarisZR",
+  "license": "GPL-2.0-or-later",
+  "devDependencies": {
+    "@eslint/js": "^9.38.0",
+    "eslint": "^9.38.0"
+  }
+}
