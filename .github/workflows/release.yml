@@ -50,7 +50,11 @@ jobs:
       - name: Get package filename
         id: package_name
         run: |
-          PACKAGE=$(ls *.shell-extension.zip | head -1)
+          PACKAGE=$(ls *.shell-extension.zip 2>/dev/null | head -1)
+          if [ -z "$PACKAGE" ]; then
+            echo "Error: No .shell-extension.zip file found"
+            exit 1
+          fi
           echo "PACKAGE=$PACKAGE" >> $GITHUB_OUTPUT
           echo "Package: $PACKAGE"
 
