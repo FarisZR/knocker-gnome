@@ -12,8 +12,10 @@ schemas/gschemas.compiled
 .DS_Store
 Thumbs.db
 
-# Node modules (if ever needed for tooling)
+# Node modules
 node_modules/
+package-lock.json
+yarn.lock
 
 # Build artifacts
 *.zip
@@ -24,3 +26,6 @@ build/
 # Temporary files
 *.tmp
 .tmp/
+
+# ESLint cache
+.eslintcache
