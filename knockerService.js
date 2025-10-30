@@ -3,7 +3,6 @@
  * Service management for Knocker systemd service and CLI commands
  */
 
-import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
 
 export class KnockerService {
