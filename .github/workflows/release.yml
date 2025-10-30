@@ -26,7 +26,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y glib-2.0 zip gettext
+          sudo apt-get install -y libglib2.0-dev zip gettext
 
       - name: Validate schemas
         run: |
@@ -55,7 +55,7 @@ jobs:
           echo "Package: $PACKAGE"
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             *.shell-extension.zip
