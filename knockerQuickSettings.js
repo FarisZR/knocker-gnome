@@ -28,7 +28,7 @@ class KnockerToggle extends QuickSettings.QuickMenuToggle {
         this._knockerMonitor = knockerMonitor;
         this._settings = extensionObject.getSettings();
         this._updateTimeoutId = null;
-    this._monitorListeners = [];
+        this._monitorListeners = [];
 
         // Set up menu
         this._setupMenu();
