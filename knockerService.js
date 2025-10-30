@@ -87,7 +87,7 @@ export class KnockerService {
             try {
                 const proc = Gio.Subprocess.new(
                     argv,
-                    Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE
+                    Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE,
                 );
 
                 proc.communicate_utf8_async(null, this._cancellable, (proc, res) => {

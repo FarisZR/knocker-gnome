@@ -150,7 +150,7 @@ export default class KnockerExtension extends Extension {
             this._indicator.destroy();
             this._indicator = null;
         }
-        
+
         // Clean up notification source
         if (this._notificationSource) {
             this._notificationSource.destroy();
@@ -167,11 +167,11 @@ export default class KnockerExtension extends Extension {
             });
             Main.messageTray.add(this._notificationSource);
         }
-        
+
         const notification = new MessageTray.Notification(
             this._notificationSource,
             'Knocker Extension',
-            'knocker-cli is not installed. Please install it from:\nhttps://github.com/FarisZR/Knocker-CLI'
+            'knocker-cli is not installed. Please install it from:\nhttps://github.com/FarisZR/Knocker-CLI',
         );
         notification.setUrgency(MessageTray.Urgency.HIGH);
         notification.setTransient(true);

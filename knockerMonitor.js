@@ -103,7 +103,7 @@ export class KnockerMonitor {
                 '-u', 'knocker.service',
                 '-o', 'json',
                 '-n', '100',
-                '--reverse'
+                '--reverse',
             ]);
 
             if (!success) {
@@ -151,9 +151,9 @@ export class KnockerMonitor {
                     '--user',
                     '-u', 'knocker.service',
                     '-o', 'json',
-                    '-f'
+                    '-f',
                 ],
-                Gio.SubprocessFlags.STDOUT_PIPE
+                Gio.SubprocessFlags.STDOUT_PIPE,
             );
 
             const stdout = proc.get_stdout_pipe();
@@ -165,7 +165,7 @@ export class KnockerMonitor {
             this._readLines(dataStream);
         } catch (e) {
             console.error('Failed to start following journald:', e);
-            
+
             // Retry after a delay if still running
             if (this._running) {
                 GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 5, () => {
@@ -196,7 +196,7 @@ export class KnockerMonitor {
                             } catch (e) {
                                 reject(e);
                             }
-                        }
+                        },
                     );
                 });
 
@@ -376,7 +376,7 @@ export class KnockerMonitor {
             try {
                 const proc = Gio.Subprocess.new(
                     argv,
-                    Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE
+                    Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE,
                 );
 
                 proc.communicate_utf8_async(null, this._cancellable, (proc, res) => {

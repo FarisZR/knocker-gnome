@@ -87,7 +87,7 @@ export default class KnockerPreferences extends ExtensionPreferences {
         const linksRow = new Adw.ActionRow({
             title: _('Knocker CLI'),
         });
-        
+
         const linkButton = new Gtk.LinkButton({
             label: _('Visit GitHub'),
             uri: 'https://github.com/FarisZR/Knocker-CLI',
@@ -99,7 +99,7 @@ export default class KnockerPreferences extends ExtensionPreferences {
         const extensionRow = new Adw.ActionRow({
             title: _('Extension Source'),
         });
-        
+
         const extensionButton = new Gtk.LinkButton({
             label: _('Visit GitHub'),
             uri: 'https://github.com/FarisZR/knocker-gnome',
