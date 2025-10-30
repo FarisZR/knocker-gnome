@@ -30,6 +30,7 @@ class KnockerToggle extends QuickSettings.QuickMenuToggle {
         this._knockerMonitor = knockerMonitor;
         this._settings = extensionObject.getSettings();
         this._updateTimeoutId = null;
+    this._monitorListeners = [];
 
         // Set up menu
         this._setupMenu();
@@ -82,41 +83,52 @@ class KnockerToggle extends QuickSettings.QuickMenuToggle {
         this.menu._settingsActions[this._extensionObject.uuid] = settingsItem;
     }
 
+    _addMonitorListener(event, handler) {
+        this._knockerMonitor.on(event, handler);
+        this._monitorListeners.push([event, handler]);
+    }
+
     _setupEventListeners() {
         // Monitor service state changes
-        this._knockerMonitor.on(KnockerEvent.SERVICE_STATE, (data) => {
+        const serviceStateHandler = () => {
             this._updateServiceState();
-        });
+        };
+        this._addMonitorListener(KnockerEvent.SERVICE_STATE, serviceStateHandler);
 
         // Monitor status snapshots
-        this._knockerMonitor.on(KnockerEvent.STATUS_SNAPSHOT, (data) => {
+        const statusSnapshotHandler = () => {
             this._updateUI();
-        });
+        };
+        this._addMonitorListener(KnockerEvent.STATUS_SNAPSHOT, statusSnapshotHandler);
 
         // Monitor whitelist updates
-        this._knockerMonitor.on(KnockerEvent.WHITELIST_APPLIED, (data) => {
+        const whitelistAppliedHandler = (data) => {
             this._updateUI();
             if (this._settings.get_boolean('notification-on-knock')) {
                 const expiryTime = this._formatTimestamp(data.expiresUnix);
                 this._showNotification('Knocker', `Whitelisted ${data.whitelistIp} until ${expiryTime}`);
             }
-        });
+        };
+        this._addMonitorListener(KnockerEvent.WHITELIST_APPLIED, whitelistAppliedHandler);
 
-        this._knockerMonitor.on(KnockerEvent.WHITELIST_EXPIRED, (data) => {
+        const whitelistExpiredHandler = () => {
             this._updateUI();
-        });
+        };
+        this._addMonitorListener(KnockerEvent.WHITELIST_EXPIRED, whitelistExpiredHandler);
 
         // Monitor next knock updates
-        this._knockerMonitor.on(KnockerEvent.NEXT_KNOCK_UPDATED, (data) => {
+        const nextKnockUpdatedHandler = () => {
             this._updateUI();
-        });
+        };
+        this._addMonitorListener(KnockerEvent.NEXT_KNOCK_UPDATED, nextKnockUpdatedHandler);
 
         // Monitor errors
-        this._knockerMonitor.on(KnockerEvent.ERROR, (data) => {
+        const errorHandler = (data) => {
             if (this._settings.get_boolean('notification-on-error')) {
                 this._showNotification('Knocker Error', data.errorMsg || data.message, MessageTray.Urgency.HIGH);
             }
-        });
+        };
+        this._addMonitorListener(KnockerEvent.ERROR, errorHandler);
 
         // Set up periodic UI updates for countdown timers
         this._updateTimeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 10, () => {
@@ -268,9 +280,14 @@ class KnockerToggle extends QuickSettings.QuickMenuToggle {
 
     destroy() {
         if (this._updateTimeoutId) {
-            GLib.Source.remove(this._updateTimeoutId);
+            GLib.source_remove(this._updateTimeoutId);
             this._updateTimeoutId = null;
         }
+
+        for (const [event, handler] of this._monitorListeners) {
+            this._knockerMonitor.off(event, handler);
+        }
+        this._monitorListeners = [];
         
         // Clean up notification source
         if (this._notificationSource) {
@@ -326,9 +343,10 @@ class KnockerIndicator extends QuickSettings.SystemIndicator {
         });
         
         // Watch for service state changes
-        this._serviceStateHandler = this._knockerMonitor.on(KnockerEvent.SERVICE_STATE, () => {
+        this._serviceStateHandler = () => {
             updateVisibility();
-        });
+        };
+        this._knockerMonitor.on(KnockerEvent.SERVICE_STATE, this._serviceStateHandler);
         
         // Periodically check service state (in case we miss events)
         this._visibilityCheckId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 10, () => {
@@ -343,8 +361,13 @@ class KnockerIndicator extends QuickSettings.SystemIndicator {
             this._settingsChangedId = null;
         }
         
+        if (this._serviceStateHandler) {
+            this._knockerMonitor.off(KnockerEvent.SERVICE_STATE, this._serviceStateHandler);
+            this._serviceStateHandler = null;
+        }
+
         if (this._visibilityCheckId) {
-            GLib.Source.remove(this._visibilityCheckId);
+            GLib.source_remove(this._visibilityCheckId);
             this._visibilityCheckId = null;
         }
         

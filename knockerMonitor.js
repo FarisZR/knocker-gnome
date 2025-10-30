@@ -111,9 +111,9 @@ export class KnockerMonitor {
             }
 
             const lines = stdout.trim().split('\n').filter(line => line.length > 0);
-            
-            // Process entries to build current state
-            for (const line of lines) {
+
+            // Process oldest to newest so the latest log entry wins
+            for (const line of lines.reverse()) {
                 try {
                     const entry = JSON.parse(line);
                     this._processEntry(entry);
