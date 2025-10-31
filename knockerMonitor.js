@@ -26,6 +26,7 @@ export class KnockerMonitor {
             expiresUnix: null,
             ttlSec: null,
             nextAtUnix: null,
+            cadenceSource: null,
             serviceState: 'stopped',
             version: null,
         };
@@ -261,6 +262,7 @@ export class KnockerMonitor {
                 this._currentState.expiresUnix = eventData.expiresUnix || null;
                 this._currentState.ttlSec = eventData.ttlSec || null;
                 this._currentState.nextAtUnix = eventData.nextAtUnix || null;
+                this._currentState.cadenceSource = eventData.cadenceSource || null;
                 break;
 
             case KnockerEvent.WHITELIST_APPLIED:
@@ -277,6 +279,7 @@ export class KnockerMonitor {
 
             case KnockerEvent.NEXT_KNOCK_UPDATED:
                 this._currentState.nextAtUnix = eventData.nextAtUnix || null;
+                this._currentState.cadenceSource = eventData.cadenceSource || null;
                 break;
         }
 
@@ -318,6 +321,9 @@ export class KnockerMonitor {
         // Next knock fields
         if (entry.KNOCKER_NEXT_AT_UNIX) {
             data.nextAtUnix = parseInt(entry.KNOCKER_NEXT_AT_UNIX, 10);
+        }
+        if (entry.KNOCKER_CADENCE_SOURCE) {
+            data.cadenceSource = entry.KNOCKER_CADENCE_SOURCE;
         }
 
         // Knock trigger fields

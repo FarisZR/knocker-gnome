@@ -175,12 +175,13 @@ export const KnockerToggle = GObject.registerClass(
                 const nextTime = this._formatTimestamp(state.nextAtUnix);
                 const now = Math.floor(Date.now() / 1000);
                 const timeUntil = state.nextAtUnix - now;
+                const sourceInfo = state.cadenceSource ? ` (${this._formatCadenceSource(state.cadenceSource)})` : '';
 
                 if (timeUntil > 0) {
                     const untilStr = this._formatDuration(timeUntil);
-                    this._nextKnockLabel.label.text = `Next knock in ${untilStr}`;
+                    this._nextKnockLabel.label.text = `Next knock in ${untilStr}${sourceInfo}`;
                 } else {
-                    this._nextKnockLabel.label.text = `Next knock: ${nextTime}`;
+                    this._nextKnockLabel.label.text = `Next knock: ${nextTime}${sourceInfo}`;
                 }
             } else {
                 this._nextKnockLabel.label.text = 'No scheduled knock';
@@ -273,6 +274,20 @@ export const KnockerToggle = GObject.registerClass(
                 const hours = Math.floor((seconds % 86400) / 3600);
                 return `${days}d ${hours}h`;
             }
+        }
+
+        _formatCadenceSource(cadenceSource) {
+            if (!cadenceSource) {
+                return '';
+            }
+
+            const sourceMap = {
+                'ttl': 'based on TTL',
+                'ttl_response': 'based on TTL response',
+                'check_interval': 'based on interval',
+            };
+
+            return sourceMap[cadenceSource] || cadenceSource;
         }
 
         destroy() {
