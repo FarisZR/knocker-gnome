@@ -6,7 +6,7 @@ A GNOME Shell extension for managing the [Knocker-CLI](https://github.com/FarisZ
 
 ## Quick Start
 
-👉 **New to Knocker?** Check out the [Quick Start Guide](docs/QUICKSTART.md) to get up and running in 5 minutes!
+👉 Check out the [Quick Start Guide](docs/QUICKSTART.md) to get up and running in 5 minutes!
 
 ## Features
 
