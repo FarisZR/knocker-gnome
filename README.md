@@ -17,6 +17,7 @@ A GNOME Shell extension for managing the [Knocker-CLI](https://github.com/FarisZ
 - **Upcoming Knock**: See when the next automatic knock is scheduled
 - **Error Notifications**: Get notified when the service encounters errors
 - **Auto-start**: Optionally auto-start the service when the extension loads
+- **GNOME Review Compliant**: Follows all [GNOME Extension Review Guidelines](https://gjs.guide/extensions/review-guidelines/review-guidelines.html)
 
 ## Requirements
 
@@ -139,6 +140,8 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
 - [Architecture Guide](docs/ARCHITECTURE.md) - Technical design details
 - [Development Guide](docs/DEVELOPMENT.md) - For contributors
 - [Publishing Guide](docs/PUBLISHING.md) - Submission to extensions.gnome.org
+- [DBus Considerations](docs/DBUS_CONSIDERATIONS.md) - Design decisions for systemd integration
+- [Review Checklist](docs/REVIEW_CHECKLIST.md) - GNOME review compliance
 
 ## Credits
 
