@@ -57,9 +57,12 @@ Monitors journald logs for knocker events and maintains current state:
 **Implementation Details:**
 - Uses `journalctl --user -u knocker.service -o json -f` to follow logs
 - Implements async/await pattern for reading log streams
-- Auto-reconnects if the log stream is interrupted
+- Auto-reconnects if the log stream is interrupted with proper timeout management
 - Filters for entries with `KNOCKER_EVENT` field
 - Validates schema version (currently "1")
+- Properly cleans up timeouts on destroy
+
+**Design Note:** Uses subprocess for journalctl rather than DBus Journal API for simplicity and maintainability. See `docs/DBUS_CONSIDERATIONS.md` for detailed rationale.
 
 ### 4. Quick Settings UI (`knockerQuickSettings.js`)
 

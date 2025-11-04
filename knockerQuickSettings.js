@@ -29,6 +29,8 @@ export const KnockerToggle = GObject.registerClass(
             this._settings = extensionObject.getSettings();
             this._updateTimeoutId = null;
             this._monitorListeners = [];
+            this._stateUpdateTimeoutId = null;
+            this._knockButtonTimeoutId = null;
 
             // Set up menu
             this._setupMenu();
@@ -208,7 +210,13 @@ export const KnockerToggle = GObject.registerClass(
             }
 
             // Update state after a short delay
-            GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
+            // Remove any existing state update timeout before creating a new one
+            if (this._stateUpdateTimeoutId) {
+                GLib.source_remove(this._stateUpdateTimeoutId);
+                this._stateUpdateTimeoutId = null;
+            }
+            this._stateUpdateTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
+                this._stateUpdateTimeoutId = null;
                 this._updateServiceState();
                 return GLib.SOURCE_REMOVE;
             });
@@ -226,7 +234,13 @@ export const KnockerToggle = GObject.registerClass(
                 }
             } finally {
             // Re-enable button after a short delay
-                GLib.timeout_add(GLib.PRIORITY_DEFAULT, 2000, () => {
+            // Remove any existing button timeout before creating a new one
+                if (this._knockButtonTimeoutId) {
+                    GLib.source_remove(this._knockButtonTimeoutId);
+                    this._knockButtonTimeoutId = null;
+                }
+                this._knockButtonTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 2000, () => {
+                    this._knockButtonTimeoutId = null;
                     this._knockButton.sensitive = true;
                     return GLib.SOURCE_REMOVE;
                 });
@@ -294,6 +308,16 @@ export const KnockerToggle = GObject.registerClass(
             if (this._updateTimeoutId) {
                 GLib.source_remove(this._updateTimeoutId);
                 this._updateTimeoutId = null;
+            }
+
+            if (this._stateUpdateTimeoutId) {
+                GLib.source_remove(this._stateUpdateTimeoutId);
+                this._stateUpdateTimeoutId = null;
+            }
+
+            if (this._knockButtonTimeoutId) {
+                GLib.source_remove(this._knockButtonTimeoutId);
+                this._knockButtonTimeoutId = null;
             }
 
             for (const [event, handler] of this._monitorListeners) {

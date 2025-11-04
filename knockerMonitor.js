@@ -32,6 +32,7 @@ export class KnockerMonitor {
         };
         this._eventCallbacks = new Map();
         this._running = false;
+        this._retryTimeoutId = null;
     }
 
     /**
@@ -169,7 +170,13 @@ export class KnockerMonitor {
 
             // Retry after a delay if still running
             if (this._running) {
-                GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 5, () => {
+                // Remove any existing retry timeout before creating a new one
+                if (this._retryTimeoutId) {
+                    GLib.source_remove(this._retryTimeoutId);
+                    this._retryTimeoutId = null;
+                }
+                this._retryTimeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 5, () => {
+                    this._retryTimeoutId = null;
                     if (this._running) {
                         this._followProcess();
                     }
@@ -224,7 +231,13 @@ export class KnockerMonitor {
 
         // Restart if still running
         if (this._running) {
-            GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 2, () => {
+            // Remove any existing retry timeout before creating a new one
+            if (this._retryTimeoutId) {
+                GLib.source_remove(this._retryTimeoutId);
+                this._retryTimeoutId = null;
+            }
+            this._retryTimeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 2, () => {
+                this._retryTimeoutId = null;
                 if (this._running) {
                     this._followProcess();
                 }
@@ -402,5 +415,10 @@ export class KnockerMonitor {
 
     destroy() {
         this.stop();
+        // Remove any pending retry timeout
+        if (this._retryTimeoutId) {
+            GLib.source_remove(this._retryTimeoutId);
+            this._retryTimeoutId = null;
+        }
     }
 }

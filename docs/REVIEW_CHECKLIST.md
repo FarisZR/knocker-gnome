@@ -29,7 +29,7 @@ This checklist verifies compliance with [GNOME Shell Extension Review Guidelines
 ### Disable
 - [x] All objects destroyed (checked in `extension.js`, `knockerQuickSettings.js`, `knockerMonitor.js`, `knockerService.js`)
 - [x] All signals disconnected (tracked in `_monitorListeners` array)
-- [x] All main loop sources removed (timeouts tracked and removed)
+- [x] All main loop sources removed (all timeouts tracked with IDs and removed before creating new ones and in destroy())
 - [x] Cancellable operations properly cancelled
 - [x] Notification sources destroyed
 
@@ -96,6 +96,8 @@ This checklist verifies compliance with [GNOME Shell Extension Review Guidelines
 - [x] No unnecessary files included in package
 - [x] No build scripts in package (excluded by build.sh)
 - [x] No .po/.pot files
+- [x] No gschemas.compiled file (not needed for GNOME 45+)
+- [x] No unused stylesheet.css file
 - [x] Only necessary icons included
 - [x] Reasonable package size
 
@@ -146,6 +148,19 @@ This checklist verifies compliance with [GNOME Shell Extension Review Guidelines
 - [x] Automated syntax checking
 - [x] Automated package building
 - [x] Release automation
+
+## ✅ GNOME Review Feedback (Addressed)
+
+### Review Round 1 (November 2024)
+
+- [x] **Timeout cleanup**: All timeouts now properly tracked and removed before creating new ones and in destroy() methods
+  - knockerMonitor.js: Added `_retryTimeoutId` tracking
+  - knockerQuickSettings.js: Added `_stateUpdateTimeoutId` and `_knockButtonTimeoutId` tracking
+- [x] **DBus consideration**: Documented design decision to use subprocess for systemd/journald operations (see `DBUS_CONSIDERATIONS.md`)
+- [x] **Remove gschemas.compiled**: Verified no compiled schemas present (not needed for GNOME 45+)
+- [x] **Remove stylesheet.css**: Removed empty, unused stylesheet file
+
+Reference: [EGO Review Guidelines](https://gjs.guide/extensions/review-guidelines/review-guidelines.html)
 
 ## Summary
 
