@@ -32,6 +32,8 @@ export class KnockerMonitor {
         };
         this._eventCallbacks = new Map();
         this._running = false;
+        this._retryTimeoutId = null;
+        this._reconnectTimeoutId = null;
     }
 
     /**
@@ -169,7 +171,14 @@ export class KnockerMonitor {
 
             // Retry after a delay if still running
             if (this._running) {
-                GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 5, () => {
+                // Remove any existing retry timeout before creating a new one
+                if (this._retryTimeoutId) {
+                    GLib.source_remove(this._retryTimeoutId);
+                    this._retryTimeoutId = null;
+                }
+
+                this._retryTimeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 5, () => {
+                    this._retryTimeoutId = null;
                     if (this._running) {
                         this._followProcess();
                     }
@@ -224,7 +233,14 @@ export class KnockerMonitor {
 
         // Restart if still running
         if (this._running) {
-            GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 2, () => {
+            // Remove any existing reconnect timeout before creating a new one
+            if (this._reconnectTimeoutId) {
+                GLib.source_remove(this._reconnectTimeoutId);
+                this._reconnectTimeoutId = null;
+            }
+
+            this._reconnectTimeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 2, () => {
+                this._reconnectTimeoutId = null;
                 if (this._running) {
                     this._followProcess();
                 }
@@ -402,5 +418,16 @@ export class KnockerMonitor {
 
     destroy() {
         this.stop();
+
+        // Clean up any pending timeouts
+        if (this._retryTimeoutId) {
+            GLib.source_remove(this._retryTimeoutId);
+            this._retryTimeoutId = null;
+        }
+
+        if (this._reconnectTimeoutId) {
+            GLib.source_remove(this._reconnectTimeoutId);
+            this._reconnectTimeoutId = null;
+        }
     }
 }

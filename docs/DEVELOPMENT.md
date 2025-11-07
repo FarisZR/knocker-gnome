@@ -37,7 +37,6 @@ knocker-gnome/
 ├── knockerQuickSettings.js   # UI components
 ├── prefs.js                  # Preferences dialog
 ├── metadata.json             # Extension metadata
-├── stylesheet.css            # Custom styles (if needed)
 ├── schemas/                  # GSettings schemas
 │   └── org.gnome.shell.extensions.knocker.gschema.xml
 ├── docs/                     # Documentation
@@ -169,9 +168,9 @@ destroy() {
         this._cancellable.cancel();
     }
 
-    // Remove timeouts
+    // Remove timeouts - CRITICAL: always remove all timeouts
     if (this._timeoutId) {
-        GLib.Source.remove(this._timeoutId);
+        GLib.source_remove(this._timeoutId);
         this._timeoutId = null;
     }
 
@@ -184,6 +183,28 @@ destroy() {
     // Call parent
     super.destroy();
 }
+```
+
+**Important: Timeout Management**
+
+When creating timeouts, always:
+1. Store the timeout ID in an instance variable
+2. Remove any existing timeout before creating a new one
+3. Clear the timeout ID when it executes
+4. Remove all timeouts in destroy()
+
+```javascript
+// Before creating a timeout
+if (this._myTimeoutId) {
+    GLib.source_remove(this._myTimeoutId);
+    this._myTimeoutId = null;
+}
+
+this._myTimeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 5, () => {
+    this._myTimeoutId = null;  // Clear on execute
+    this._doSomething();
+    return GLib.SOURCE_REMOVE;
+});
 ```
 
 ## GObject Registration

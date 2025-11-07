@@ -33,7 +33,6 @@ cp knockerMonitor.js "$BUILD_DIR/"
 cp knockerQuickSettings.js "$BUILD_DIR/"
 cp prefs.js "$BUILD_DIR/"
 cp metadata.json "$BUILD_DIR/"
-cp stylesheet.css "$BUILD_DIR/"
 
 # Copy icons
 echo "Copying icons..."

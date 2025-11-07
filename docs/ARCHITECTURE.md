@@ -60,6 +60,7 @@ Monitors journald logs for knocker events and maintains current state:
 - Auto-reconnects if the log stream is interrupted
 - Filters for entries with `KNOCKER_EVENT` field
 - Validates schema version (currently "1")
+- **Note:** Uses subprocess instead of D-Bus because systemd journald does not provide a D-Bus API for reading journal entries. The only programmatic interfaces are the native C API (sd-journal) and the journalctl CLI tool.
 
 ### 4. Quick Settings UI (`knockerQuickSettings.js`)
 
