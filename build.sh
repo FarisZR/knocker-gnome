@@ -45,8 +45,8 @@ mkdir -p "$BUILD_DIR/schemas"
 cp schemas/*.xml "$BUILD_DIR/schemas/"
 
 # Compile schemas
-echo "Compiling schemas..."
-glib-compile-schemas "$BUILD_DIR/schemas/"
+# echo "Compiling schemas..."
+# glib-compile-schemas "$BUILD_DIR/schemas/"
 
 # Create zip file
 echo "Creating package..."
