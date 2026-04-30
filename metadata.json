@@ -4,7 +4,8 @@
   "uuid": "Knocker@fariszr.com",
   "shell-version": [
     "48",
-    "49"
+    "49",
+    "50"
   ],
   "settings-schema": "org.gnome.shell.extensions.knocker",
   "url": "https://github.com/FarisZR/knocker-gnome",
