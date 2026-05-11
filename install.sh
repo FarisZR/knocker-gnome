@@ -32,7 +32,6 @@ cp knockerMonitor.js "$EXTENSION_DIR/"
 cp knockerQuickSettings.js "$EXTENSION_DIR/"
 cp prefs.js "$EXTENSION_DIR/"
 cp metadata.json "$EXTENSION_DIR/"
-cp stylesheet.css "$EXTENSION_DIR/"
 
 # Copy icons
 echo "Copying icons..."
