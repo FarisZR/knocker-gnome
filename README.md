@@ -4,10 +4,6 @@ A GNOME Shell extension for managing the [Knocker-CLI](https://github.com/FarisZ
 
 ![Knocker GNOME extension shown in Quick Settings with toggle and IP/knock status](assets/screenshot.webp)
 
-## Quick Start
-
-👉 Check out the [Quick Start Guide](docs/QUICKSTART.md) to get up and running in 5 minutes!
-
 ## Features
 
 - **Quick Settings Integration**: Easily toggle the knocker service on/off from the GNOME Quick Settings panel
@@ -20,40 +16,43 @@ A GNOME Shell extension for managing the [Knocker-CLI](https://github.com/FarisZ
 
 ## Requirements
 
-- GNOME Shell 48 or 49
+- GNOME Shell 48, 49, 50 or 51
 - [Knocker-CLI](https://github.com/FarisZR/Knocker-CLI) installed and configured
 - systemd user service `knocker.service` set up
 
 ## Installation
 
-### From Source
+Install [Homebrew](https://brew.sh) on Linux, then:
 
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/FarisZR/knocker-gnome.git
-   cd knocker-gnome
-   ```
+```bash
+brew install --cask fariszr/tap/knocker-gnome
+```
 
-2. Install the extension:
-   ```bash
-   mkdir -p ~/.local/share/gnome-shell/extensions/Knocker@fariszr.com
-   cp -r . ~/.local/share/gnome-shell/extensions/Knocker@fariszr.com/
-   ```
+Log out and back in, then enable the extension:
 
-3. Compile the GSettings schema:
-   ```bash
-   cd ~/.local/share/gnome-shell/extensions/Knocker@fariszr.com
-   glib-compile-schemas schemas/
-   ```
+```bash
+gnome-extensions enable Knocker@fariszr.com
+```
 
-4. Enable the extension:
-   ```bash
-   gnome-extensions enable Knocker@fariszr.com
-   ```
+Already installed manually? Move
+`~/.local/share/gnome-shell/extensions/Knocker@fariszr.com` to a backup location
+first; Homebrew will manage that directory from then on. Your extension preferences
+and Knocker service configuration are preserved.
 
-5. Restart GNOME Shell:
-   - On X11: Press `Alt+F2`, type `r`, and press Enter
-   - On Wayland: Log out and log back in
+Update with:
+
+```bash
+brew update
+brew upgrade --cask knocker-gnome
+```
+
+Log out and back in after an upgrade to load the new code. The CLI remains a
+separate prerequisite (`brew install --cask fariszr/tap/knocker-cli`); configure
+its `knocker.service` as described in the [CLI documentation](https://github.com/FarisZR/Knocker-CLI).
+
+Every current `main` build and version release is tested and packaged automatically,
+then made available through the tap. See [release automation](docs/PUBLISHING.md)
+for the publishing process and scheduled synchronization fallback.
 
 ## Usage
 

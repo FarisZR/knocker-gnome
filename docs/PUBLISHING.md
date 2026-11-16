@@ -1,175 +1,37 @@
-# Publishing Guide
+# Release automation
 
-This guide explains how to prepare and submit the Knocker extension to extensions.gnome.org.
+`.github/workflows/build.yml` tests pull requests, pushes to `main`, version tags
+(`v*`), published releases and manual runs. One build command creates both bundles,
+and real headless GNOME 48–51 integration checks must pass before publication.
+Pull requests never publish.
 
-## Pre-submission Checklist
+A successful current-main commit publishes an immutable `build-<full SHA>` GitHub
+release. Version tags publish under the tag. Both contain:
 
-### Code Quality ✅
-- [x] All JavaScript follows GNOME Shell Extension Guidelines
-- [x] No deprecated modules used (ByteArray, Lang, Mainloop)
-- [x] ES6+ modern JavaScript features used throughout
-- [x] Async/await used for asynchronous operations
-- [x] ESLint configured and all files pass linting
+- `Knocker@fariszr.com.shell-extension.zip` for GNOME review/manual installation
+- `knocker-gnome.tar.gz` for Homebrew, containing the UUID directory and compiled schema
+- `SHA256SUMS`
 
-### Lifecycle Compliance ✅
-- [x] No objects created during initialization (constructor)
-- [x] All objects created in `enable()` are destroyed in `disable()`
-- [x] All signals connected are disconnected in `disable()`
-- [x] All main loop sources are removed in `disable()`
-- [x] Proper cancellation handling for async operations
+The build commit is embedded in metadata. Published bytes are checked after upload,
+assets are never replaced, and reruns can complete a partial draft. Failed builds
+never reach the tap. Delayed main builds check the current head before and after
+upload so they cannot make an older build latest. Workflows serialize publication.
 
-### Library Usage ✅
-- [x] No GTK/Gdk/Adw imports in `extension.js`
-- [x] No Clutter/Meta/St/Shell imports in `prefs.js`
-- [x] Proper separation of extension and preferences code
+After publication, the notification job dispatches
+`FarisZR/homebrew-tap/.github/workflows/sync.yml`. For immediate notification,
+configure repository secret `TAP_GITHUB_TOKEN` with a fine-grained token restricted
+to that tap repository and Actions write permission. No token is committed or
+included in a bundle. Without this optional secret, the tap's existing six-hour
+scheduled sync still picks up the latest complete release. It can also be run
+manually with `gh workflow run sync.yml --repo FarisZR/homebrew-tap`.
 
-### Metadata ✅
-- [x] Valid `metadata.json` with all required fields
-- [x] UUID follows format: `name@domain.tld`
-- [x] Shell versions specified correctly (48, 49)
-- [x] URL points to GitHub repository
-- [x] Version number included
+The tap validates the expected asset URL, uploaded state and SHA-256 before rendering
+`Casks/knocker-gnome.rb`. Commit builds use the full hash as Homebrew's version;
+version releases use their version number. The tap CI verifies installation,
+reinstallation and removal on Linux x86_64 and ARM64. End users update with
+`brew update && brew upgrade --cask knocker-gnome` and log out/in afterward.
 
-### Schema ✅
-- [x] GSettings schema compiles without errors
-- [x] Schema ID matches metadata settings-schema
-- [x] Schema path follows convention
-- [x] All keys have proper types and defaults
-
-### Documentation ✅
-- [x] README with clear description and installation
-- [x] LICENSE file (GPL-2.0-or-later)
-- [x] No excessive or unnecessary files
-- [x] All documentation under docs/ directory
-
-### Testing ✅
-- [x] Extension tested on target GNOME Shell versions
-- [x] All features work as expected
-- [x] No errors in logs
-- [x] Proper enable/disable cycle
-- [x] CI/CD pipeline validates everything
-
-## Building the Submission Package
-
-1. **Update version number** in `metadata.json`:
-   ```json
-   {
-     "version": 1
-   }
-   ```
-
-2. **Build the package**:
-   ```bash
-   ./build.sh
-   ```
-
-3. **Verify the package**:
-   ```bash
-   unzip -l Knocker@fariszr.com.shell-extension.zip
-   ```
-
-   Should contain:
-   - `extension.js`
-   - `knockerService.js`
-   - `knockerMonitor.js`
-   - `knockerQuickSettings.js`
-   - `prefs.js`
-   - `metadata.json`
-   - `stylesheet.css`
-   - `schemas/` directory with compiled schema
-   - `icons/` directory with icon files
-
-4. **Test the package**:
-   ```bash
-   gnome-extensions install Knocker@fariszr.com.shell-extension.zip
-   gnome-extensions enable Knocker@fariszr.com
-   # Restart GNOME Shell and test
-   ```
-
-## Submission to extensions.gnome.org
-
-### Create Account
-1. Go to https://extensions.gnome.org/accounts/register/
-2. Create an account (requires email verification)
-
-### Submit Extension
-1. Go to https://extensions.gnome.org/upload/
-2. Fill in the form:
-   - **Extension file**: Upload the `.shell-extension.zip`
-   - **Shell versions**: Select 48 and 49
-   - **Screenshot**: Upload a screenshot of the extension in action
-   - **Description**: Copy from README.md
-   - **URL**: https://github.com/FarisZR/knocker-gnome
-
-3. Submit for review
-
-### Review Process
-- Extensions are reviewed by GNOME volunteers
-- Review typically takes 1-4 weeks
-- You'll receive email notifications about the review status
-- Reviewers may request changes before approval
-
-### After Approval
-- Extension will be available on extensions.gnome.org
-- Users can install it via the website or GNOME Extensions app
-- You can upload new versions through the same process
-
-## Updating the Extension
-
-### For New Releases
-
-1. **Update version**:
-   - Increment version in `metadata.json`
-   - Add entry to `CHANGELOG.md`
-
-2. **Create Git tag**:
-   ```bash
-   git tag -a v1.1.0 -m "Release version 1.1.0"
-   git push origin v1.1.0
-   ```
-
-3. **GitHub Actions will**:
-   - Build the package automatically
-   - Create a GitHub release
-   - Attach the `.shell-extension.zip` file
-
-4. **Submit to extensions.gnome.org**:
-   - Log in to your account
-   - Upload the new version
-   - Submit for review
-
-### For Bug Fixes
-
-Same process as new releases, but increment the patch version (e.g., 1.0.0 → 1.0.1).
-
-## Common Review Issues
-
-### Issues to Avoid
-- Unused imports
-- Objects not destroyed in `disable()`
-- Signals not disconnected
-- Main loop sources not removed
-- Excessive logging
-- Including unnecessary files (build scripts, test files)
-- Using deprecated modules
-
-### How We've Addressed These
-- ✅ CI/CD validates everything automatically
-- ✅ ESLint catches unused imports
-- ✅ Proper cleanup verified in code review
-- ✅ Only necessary files included in package
-- ✅ Modern JavaScript throughout
-
-## Support
-
-If you have questions about publishing:
-- Check the [GNOME Shell Extensions Review Guidelines](https://gjs.guide/extensions/review-guidelines/review-guidelines.html)
-- Ask in the [GNOME Extensions Matrix room](https://matrix.to/#/#extensions:gnome.org)
-- Open an issue on GitHub
-
-## Resources
-
-- [extensions.gnome.org](https://extensions.gnome.org)
-- [GJS Guide](https://gjs.guide)
-- [GNOME Shell Extensions Review Guidelines](https://gjs.guide/extensions/review-guidelines/review-guidelines.html)
-- [GNOME Human Interface Guidelines](https://developer.gnome.org/hig/)
+To publish a version, update CHANGELOG.md and metadata's positive integer version
+when preparing an extensions.gnome.org submission, then push an annotated tag such
+as `v1.1.0`. For GNOME review, upload the ZIP from `dist/`; never upload the Homebrew
+tarball. Existing GSettings keys and the extension UUID must remain stable.

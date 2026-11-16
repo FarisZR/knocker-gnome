@@ -1,6 +1,9 @@
 import js from '@eslint/js';
 
 const baseGlobals = {
+    console: 'readonly',
+    TextDecoder: 'readonly',
+    global: 'readonly',
     imports: 'readonly',
     log: 'readonly',
     logError: 'readonly',

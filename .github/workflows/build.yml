@@ -1,0 +1,123 @@
+name: Test, package and publish
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      commit: ${{ steps.version.outputs.commit }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gjs libglib2.0-bin
+          npm ci
+      - name: Identify build
+        id: version
+        run: |
+          commit=$(git rev-parse HEAD)
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=build-$commit" >> "$GITHUB_OUTPUT"
+          fi
+      - run: npm run lint
+      - run: npm test
+      - name: Build both bundles
+        env:
+          BUILD_COMMIT: ${{ steps.version.outputs.commit }}
+        run: |
+          ./build.sh
+          cd dist
+          sha256sum *.zip *.tar.gz > SHA256SUMS
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: extension-bundles
+          path: dist/
+          if-no-files-found: error
+
+  shell:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        fedora: ['42', '43', '44', '45']
+    container: fedora:${{ matrix.fedora }}
+    steps:
+      - name: Install Shell dependencies
+        run: dnf install -y git gnome-shell gjs mesa-dri-drivers python3 dbus-daemon glib2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Exercise a real headless GNOME Shell
+        run: python3 scripts/test-shell.py
+
+  publish:
+    needs: [build, shell]
+    concurrency:
+      group: knocker-publish
+      cancel-in-progress: false
+      queue: max
+    if: github.repository == 'FarisZR/knocker-gnome' && github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    outputs:
+      published: ${{ steps.release.outputs.published }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: extension-bundles
+          path: dist
+      - name: Publish verified immutable release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BUILD_COMMIT: ${{ needs.build.outputs.commit }}
+          RELEASE_TAG: ${{ needs.build.outputs.tag }}
+        run: ./scripts/publish.sh dist
+
+  update-homebrew:
+    needs: publish
+    if: needs.publish.outputs.published == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Notify tap
+        env:
+          GH_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo '::notice::TAP_GITHUB_TOKEN is missing; the tap scheduled sync will pick up this release.'
+            exit 0
+          fi
+          printf '%s\n' '{"ref":"main"}' | gh api --method POST \
+            repos/FarisZR/homebrew-tap/actions/workflows/sync.yml/dispatches --input -

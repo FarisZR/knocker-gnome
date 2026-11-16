@@ -14,7 +14,6 @@ Thumbs.db
 
 # Node modules
 node_modules/
-package-lock.json
 yarn.lock
 
 # Build artifacts
@@ -29,3 +28,6 @@ build/
 
 # ESLint cache
 .eslintcache
+
+__pycache__/
+*.pyc
