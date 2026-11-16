@@ -30,7 +30,6 @@ for asset in ./*.zip ./*.tar.gz SHA256SUMS; do
         gh release upload "$RELEASE_TAG" "$asset"
     fi
 done
-# Verify published bytes too; retries never replace an existing asset.
 gh release download "$RELEASE_TAG" --dir "$assets_dir/download"
 cmp SHA256SUMS "$assets_dir/download/SHA256SUMS"
 (cd "$assets_dir/download" && sha256sum --check SHA256SUMS)

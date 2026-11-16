@@ -140,6 +140,21 @@ Verification completed locally:
 - Tap generator's 15 release-validation tests, including portable Knocker commit
   builds and version releases, incomplete assets and untrusted tags.
 
-Live publishing and Homebrew installation results are recorded after activation.
+Live activation also passed:
+
+- Source workflow run `43859982798` passed every job and published immutable
+  `build-6194492be2769d0c338a844a3d1f2add75f0f344` with all three verified assets.
+- Tap commit `21d75bf` adds the generator, cask, installation matrix and documentation.
+  Tap test run `43860423903` passed updater tests and install/reinstall/uninstall on
+  both Linux x86_64 and ARM64. Sync run `43860423960` also passed.
+- Local Homebrew fetch/install/reinstall succeeded after backing up the manual
+  extension under `~/.local/state/knocker-gnome/backups/`. The running service's
+  MainPID/ActiveState and extension preferences matched before and after install.
+- The regenerated TAP_GITHUB_TOKEN was installed in both Knocker and Whisper.
+  Whisper's notification job rerun succeeded and triggered tap sync `43860457696`.
+  No workflow source edit was necessary there: it already referenced that secret.
+
+The final verification commit also exercises automatic source publication and tap
+synchronization after the token rotation.
 A new Wayland login remains required to reload the existing desktop's cached
 extension metadata and modules.

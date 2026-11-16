@@ -107,6 +107,5 @@ export class KnockerMonitor {
         this._retryId = null;
         if (this._process)
             this._process.force_exit();
-        // The pending read owns closing its stream in finally.
     }
 }

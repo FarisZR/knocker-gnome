@@ -69,7 +69,6 @@ export class KnockerService {
             const result = await this._command([
                 'systemctl', '--user', active ? 'start' : 'stop', 'knocker.service',
             ]);
-            // A poll started before systemctl must not overwrite the confirmed result.
             await this._refresh;
             await this.refresh();
             return result.success;
