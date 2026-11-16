@@ -95,7 +95,7 @@ jobs:
         with:
           name: extension-bundles
           path: dist
-      - name: Publish verified immutable release
+      - name: Publish stable release or @main prerelease
         id: release
         env:
           GH_TOKEN: ${{ github.token }}

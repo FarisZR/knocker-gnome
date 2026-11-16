@@ -28,6 +28,17 @@ Install [Homebrew](https://brew.sh) on Linux, then:
 brew install --cask fariszr/tap/knocker-gnome
 ```
 
+This default package follows the latest tagged stable release. For the latest
+commit on `main`, opt into the development channel instead:
+
+```bash
+brew install --cask fariszr/tap/knocker-gnome@main
+```
+
+The channels install the same extension and cannot coexist. To switch, uninstall
+the installed cask first, then install the other. Extension preferences and the
+Knocker service configuration are preserved.
+
 Log out and back in, then enable the extension:
 
 ```bash
@@ -50,8 +61,9 @@ Log out and back in after an upgrade to load the new code. The CLI remains a
 separate prerequisite (`brew install --cask fariszr/tap/knocker-cli`); configure
 its `knocker.service` as described in the [CLI documentation](https://github.com/FarisZR/Knocker-CLI).
 
-Every current `main` build and version release is tested and packaged automatically,
-then made available through the tap. See [release automation](docs/PUBLISHING.md)
+Every current `main` build updates the GitHub `@main` prerelease and the
+`knocker-gnome@main` cask. Versioned releases update the default `knocker-gnome`
+cask and GitHub’s latest stable release. Both channels are tested automatically. See [release automation](docs/PUBLISHING.md)
 for the publishing process and scheduled synchronization fallback.
 
 ## Usage

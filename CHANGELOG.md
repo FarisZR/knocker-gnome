@@ -1,11 +1,11 @@
 # Changelog
 
-## Unreleased
+## 1.1.0
 
 - Support GNOME Shell 51 while retaining 48–50 compatibility.
 - Fix auto-start, shared service status, notification APIs and asynchronous cleanup.
 - Replace startup/button delays with command completion and own journal followers.
-- Publish verified commit and version bundles to the Homebrew tap automatically.
+- Publish stable version bundles by default and offer the latest main commit through @main.
 - Add behavior, packaging and real GNOME Shell integration checks.
 
 All notable changes to the Knocker GNOME Extension will be documented in this file.

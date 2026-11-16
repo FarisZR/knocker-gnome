@@ -158,3 +158,16 @@ The final verification commit also exercises automatic source publication and ta
 synchronization after the token rotation.
 A new Wayland login remains required to reload the existing desktop's cached
 extension metadata and modules.
+
+
+## Follow-up: stable default and explicit @main development channel
+
+The user requested a moving `@main` release and a stable default. This supersedes
+the earlier choice to mark commit builds latest. Version tags now publish full
+releases and update the default cask; main builds are prereleases. A verified
+immutable build is published first, then the `@main` tag/assets are refreshed.
+The development cask resolves that moving ref to immutable, checksummed assets.
+Mutual Homebrew conflicts protect the shared extension directory when switching.
+The GNOME 51 changes are released as v1.1.0, with GNOME metadata version 2.
+Regression checks cover main tag movement, preserving immutable assets, stable
+latest selection, stable rejection of commit/prerelease data, and tag resolution.
